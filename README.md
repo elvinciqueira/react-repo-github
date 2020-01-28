@@ -22,7 +22,7 @@ To clone and run this application, you'll need [Git](https://git-scm.com), [Node
 # Clone this repository
 $ git clone git@github.com:elvinciqueira/react-repo-github.git
 # Go into the repository
-$ cd react-github-repo-list
+$ cd react-repo-github
 
 # Install dependencies
 $ yarn install
