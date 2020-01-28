@@ -32,7 +32,7 @@ $ yarn start
 ```
 
 ## License
-This project is under the MIT license. See the [LICENSE](https://github.com/elvinciqueira/react-github-repo/blob/master/LICENSE) for more information.
+This project is under the MIT license. See the [LICENSE](https://github.com/elvinciqueira/react-repo-github/blob/master/LICENCE.md) for more information.
 
 ---
 
