@@ -13,15 +13,14 @@ This project was developed at the [RocketSeat GoStack Bootcamp](https://rocketse
 -  [styled-components](https://www.styled-components.com/)
 -  [GitHub REST API v3](https://developer.github.com/v3/)
 -  [VS Code][vc] with [EditorConfig][vceditconfig] and [ESLint][vceslint]
-  
+
 ##  How To Use
 
 To clone and run this application, you'll need [Git](https://git-scm.com), [Node.js v10.16][nodejs] or higher + [Yarn v1.13][yarn] or higher installed on your computer. From your command line:
 
 ```bash
 # Clone this repository
-$ git clone https://github.com/elvinciqueira/react-github-repo
-
+$ git clone git@github.com:elvinciqueira/react-repo-github.git
 # Go into the repository
 $ cd react-github-repo-list
 
