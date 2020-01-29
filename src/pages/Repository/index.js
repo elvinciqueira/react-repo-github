@@ -1,17 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { FaSpinner, FaGithubAlt } from 'react-icons/fa';
-import { GoArrowLeft } from 'react-icons/go';
+import { FaStar, FaRegFileAlt, FaGithubAlt, FaSpinner } from 'react-icons/fa';
+import { GoRepoForked, GoArrowLeft, GoArrowRight } from 'react-icons/go';
 import api from '../../services/api';
-
-import { Loading, Owner, IssueList } from './RepositoryStyles';
+import {
+  Loading,
+  Owner,
+  IssueList,
+  FilterList,
+  PageNav,
+  OwnerProfile,
+  RepoInfo,
+  IssueLabel
+} from './RepositoryStyles';
 import Container, { Icon } from '../../components/Container';
 
 const Repository = ({ match }) => {
   const [repository, setRepository] = useState({});
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState([
+    { state: 'all', label: 'All Issues', active: true },
+    { state: 'open', label: 'Open', active: false },
+    { state: 'closed', label: 'Closed', active: false },
+  ])
+  const [filterIndex, setFilterIndex] = useState(0);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     async function callApi() {
@@ -21,8 +36,8 @@ const Repository = ({ match }) => {
         api.get(`/repos/${repoName}`),
         api.get(`/repos/${repoName}/issues`, {
           params: {
-            state: 'open',
-            per_page: 5,
+            state: filters.find(filter => filter.active).state,
+            per_page: 4,
           }
         }),
       ]);
@@ -35,7 +50,33 @@ const Repository = ({ match }) => {
     }
 
     callApi();
-  }, [])
+  }, []);
+
+  const loadFilters = async () => {
+    const repoName = decodeURIComponent(match.params.repository);
+
+    const response = await api.get(`/repos/${repoName}/issues`, {
+      params: {
+        state: filters[filterIndex].state,
+        per_page: 4,
+        page,
+      },
+    });
+
+    setIssues(response.data);
+  };
+
+  const handleFilters = async filterIndex => {
+    await setFilterIndex(filterIndex);
+
+    loadFilters();
+  };
+
+  const handlePage = async action => {
+    await setPage(action === 'back' ? page - 1 : page + 1);
+
+    loadFilters();
+  };
 
   if (loading) {
     return (
@@ -61,27 +102,98 @@ const Repository = ({ match }) => {
             <GoArrowLeft /> Back to Repositories
           </Link>
         </div>
-        <img src={repository.owner.avatar_url} alt={repository.owner.login}/>
-        <h1>{repository.name}</h1>
-        <p>{repository.description}</p>
+        <OwnerProfile>
+          <a
+            href={repository.owner.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src={repository.owner.avatar_url} alt={repository.owner.login} />
+          </a>
+          <h2>{repository.owner.login}</h2>
+        </OwnerProfile>
+        <RepoInfo>
+          <h1>
+            <a href={repository.html_url} target="_blank" rel="noopener noreferrer">
+              {repository.name}
+            </a>
+          </h1>
+          <div>
+            {repository.license && (
+              <span>
+                <FaRegFileAlt /> {repository.license.name}
+              </span>
+            )}
+             {repository.stargazers_count !== 0 && (
+                <span>
+                  <FaStar />
+                  {`${Number(repository.stargazers_count).toLocaleString(undefined, {
+                    minimumIntegerDigits: 2,
+                  })} ${repository.stargazers_count === 1 ? 'star' : 'stars'}`}
+                </span>
+              )}
+               {repository.forks !== 0 && (
+                <span>
+                  <GoRepoForked />
+                  {`${Number(repository.forks_count).toLocaleString()} ${
+                    repository.forks_count === 1 ? 'fork' : 'forks'
+                  }`}
+                </span>
+              )}
+          </div>
+          <p>{repository.description}</p>
+        </RepoInfo>
       </Owner>
 
       <IssueList>
-        {issues.map(issue => (
-          <li key={String(issue.id)}>
-            <img src={issue.user.avatar_url} alt={issue.user.login} />
-            <div>
-              <strong>
-                <a href={issue.html_url}>{issue.title}</a>
-                {issue.labels.map(label => (
-                  <span key={String(label.id)}>{label.name}</span>
-                ))}
-              </strong>
-              <p>{issue.user.login}</p>
-            </div>
-          </li>
-        ))}
-      </IssueList>
+          <FilterList active={filterIndex}>
+            {filters.map((filter, index) => (
+              <button
+                type="button"
+                key={filter.state}
+                onClick={() => handleFilters(index)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </FilterList>
+          {issues.map(issue => (
+            <li key={String(issue.id)}>
+              <a
+                href={issue.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src={issue.user.avatar_url} alt={issue.user.login} />
+                <div>
+                  <strong>
+                    <span>{issue.title}</span>
+                    {issue.labels.map(label => (
+                      <IssueLabel key={String(label.id)} color={label.color}>
+                        {label.name}
+                      </IssueLabel>
+                    ))}
+                  </strong>
+                  <p> {issue.user.login} </p>
+                </div>
+              </a>
+            </li>
+          ))}
+          <PageNav>
+            <button
+              type="button"
+              disabled={page < 2}
+              onClick={() => handlePage('back')}
+            >
+              <GoArrowLeft />
+              Prev. Page
+            </button>
+            <button type="button" onClick={() => handlePage('next')}>
+              Next Page
+              <GoArrowRight />
+            </button>
+          </PageNav>
+        </IssueList>
     </Container>
   );
 };
@@ -91,7 +203,7 @@ Repository.propTypes = {
     params: PropTypes.shape({
       repository: PropTypes.string,
     }),
-  }).isRequired
+  }).isRequired,
 };
 
 export default Repository;
